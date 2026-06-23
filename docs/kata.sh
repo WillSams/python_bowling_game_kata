@@ -8,6 +8,7 @@
 #############################################
 
 # 1.1 - Create the directory on your local file system
+source deactivate
 mkdir python-bowling-kata && cd $_
 
 git init .
@@ -16,7 +17,7 @@ git init .
 wget -O .gitignore https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore
 
 # 1.3 - Create a virtual environment and activate it
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate  # for Windows: source venv/Scripts/activate
 
 # 1.4 - Install dependencies
