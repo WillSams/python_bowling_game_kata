@@ -60,9 +60,9 @@ Note: formatting and linting will occur whenever you commit code via the [pre-co
 The Bowling Game is the first step in a larger learning progression. The [`docs/`](./docs/README.md) folder contains a series of additional katas, each a self-contained shell script that builds a small project test-first while introducing new Python concepts:
 
 1. [Bowling Game](./docs/kata.sh) — TDD fundamentals (this kata)
-2. [File Renamer](./docs/rename-files-kata.sh) — core syntax in a procedural style
-3. [Soccer Text Adventure](./docs/soccer-adventure-kata.sh) — object-oriented programming
-4. [Async Chat](./docs/chat-app-kata.sh) — concurrency, asyncio, and the GIL
+2. [File Renamer](./docs/additional_katas/rename-files-kata.sh) — core syntax in a procedural style
+3. [Soccer Text Adventure](./docs/additional_katas/soccer-adventure-kata.sh) — object-oriented programming
+4. [Async Chat](./docs/additional_katas/chat-app-kata.sh) — concurrency, asyncio, and the GIL
 
 See [docs/README.md](./docs/README.md) for the full progression and how to practice a kata.
 
