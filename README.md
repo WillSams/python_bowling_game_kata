@@ -21,6 +21,7 @@ Before we write a single line of code, let's write our "specs".  What are we att
 * [Prerequisites](#prerequisites)
 * [Getting Started](#getting-started)
 * [Scripts](#scripts)
+* [More Katas](#more-katas)
 * [CI](#ci)
 * [License](#license)
 
@@ -53,6 +54,17 @@ To format code: `./scripts/format.sh`
 To lint: `./scripts/lint.sh`
 
 Note: formatting and linting will occur whenever you commit code via the [pre-commit](https://pypi.org/project/pre-commit/) package.  You can also run these scripts manually to check for issues before committing. There is also configuration to run tests on pre-push in [.pre-commit-config.yaml](./.pre-commit-config.yaml) to block pushes remotely if tests fail locally.
+
+## More Katas
+
+The Bowling Game is the first step in a larger learning progression. The [`docs/`](./docs/README.md) folder contains a series of additional katas, each a self-contained shell script that builds a small project test-first while introducing new Python concepts:
+
+1. [Bowling Game](./docs/kata.sh) — TDD fundamentals (this kata)
+2. [File Renamer](./docs/rename-files-kata.sh) — core syntax in a procedural style
+3. [Soccer Text Adventure](./docs/soccer-adventure-kata.sh) — object-oriented programming
+4. [Async Chat](./docs/chat-app-kata.sh) — concurrency, asyncio, and the GIL
+
+See [docs/README.md](./docs/README.md) for the full progression and how to practice a kata.
 
 ## CI
 
