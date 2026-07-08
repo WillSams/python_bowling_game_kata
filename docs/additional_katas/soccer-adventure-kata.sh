@@ -19,7 +19,7 @@
 # 1 - Create a new repo                     #
 #############################################
 
-source deactivate
+deactivate 2>/dev/null || true
 rm -rf python-soccer-adventure-kata && mkdir python-soccer-adventure-kata && cd $_
 
 git init .
@@ -28,10 +28,6 @@ wget -O .gitignore https://raw.githubusercontent.com/github/gitignore/main/Pytho
 python -m venv .venv
 source .venv/bin/activate  # for Windows: source .venv/Scripts/activate
 
-# Skip writing .pyc files. With `testpaths = specs/**`, a stale __pycache__
-# would otherwise get globbed by pytest on repeated runs and break collection.
-export PYTHONDONTWRITEBYTECODE=1
-
 # faker generates the demo player names/countries used by main.py
 python -m pip install --upgrade pip
 pip install pytest pytest-cov black isort flake8 mypy pre-commit faker
@@ -39,7 +35,7 @@ pip freeze | grep -E "^(pytest==|pytest-cov==|black==|isort==|flake8==|mypy==|pr
 
 cat > pytest.ini << 'EOF'
 [pytest]
-testpaths = specs/**
+testpaths = specs
 python_files = when*.py
 python_classes = Describe
 python_functions = should_*
@@ -408,7 +404,7 @@ from dataclasses import dataclass
 
 from faker import Faker
 
-from src.pitch import Match, Player, Position, SpecialMove, Striker, Team
+from src.pitch import Player, Position, SpecialMove, Striker, Team
 
 fake = Faker()
 Faker.seed(42)  # deterministic names so the demo output is stable
@@ -426,9 +422,9 @@ class Slot:
 # Strikers FC line up 3-5-2 (1 GK + 3 DEF + 5 MID + 2 FWD = 11 players)
 STRIKERS_FC = [
     Slot("GK", Position.GOALKEEPER),
-    Slot("LCB", Position.DEFENDER), 
+    Slot("LCB", Position.DEFENDER),
     Slot("CB", Position.DEFENDER),
-    Slot("RCB", Position.DEFENDER), 
+    Slot("RCB", Position.DEFENDER),
     Slot("LM", Position.MIDFIELDER),
     Slot("LCM", Position.MIDFIELDER),
     Slot("CM", Position.MIDFIELDER),
@@ -449,8 +445,8 @@ DEPORTIVO_CAROLINAS = [
     Slot("DM", Position.MIDFIELDER),
     Slot("LCM", Position.MIDFIELDER),
     Slot("RCM", Position.MIDFIELDER),
-    Slot("AM", Position.MIDFIELDER), 
-    Slot("ST", Position.FORWARD), 
+    Slot("AM", Position.MIDFIELDER),
+    Slot("ST", Position.FORWARD),
 ]
 
 
@@ -584,11 +580,21 @@ def main() -> None:
     home = to_team("Strikers FC", home_squad)
     away = to_team("Deportivo Carolinas", away_squad)
 
+    # attack_power() calls each player's shoot(), which spends stamina - so we
+    # tally each side exactly once and decide the result from those numbers
+    # (the same rule Match.play() encapsulates and the specs cover).
+    home_score = home.attack_power()
+    away_score = away.attack_power()
     print(
-        f"\nAttacking output - Strikers FC: {home.attack_power()}"
-        f" | Deportivo: {away.attack_power()}"
+        f"\nAttacking output - Strikers FC: {home_score}"
+        f" | Deportivo: {away_score}"
     )
-    result = Match(home, away).play()
+    if home_score > away_score:
+        result = "Strikers FC wins"
+    elif away_score > home_score:
+        result = "Deportivo Carolinas wins"
+    else:
+        result = "Draw"
     print(f"Full time: {result}\n")
 
     if result == "Strikers FC wins":

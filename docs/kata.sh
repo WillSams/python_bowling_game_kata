@@ -8,7 +8,7 @@
 #############################################
 
 # 1.1 - Create the directory on your local file system
-source deactivate
+deactivate 2>/dev/null || true
 mkdir python-bowling-kata && cd $_
 
 git init .
@@ -29,7 +29,7 @@ pip freeze | grep -E "^(pytest==|pytest-cov==|black==|isort==|flake8==|mypy==|pr
 # 1.6 - Create pytest.ini
 cat > pytest.ini << 'EOF'
 [pytest]
-testpaths = specs/**
+testpaths = specs
 python_files = when*.py
 python_classes = Describe
 python_functions = should_*

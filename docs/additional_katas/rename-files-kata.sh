@@ -20,7 +20,7 @@
 #############################################
 
 # 1.1 - Create the directory and initialize git
-source deactivate
+deactivate 2>/dev/null || true
 rm -rf python-file-renamer-kata && mkdir python-file-renamer-kata && cd $_
 
 git init .
@@ -32,10 +32,6 @@ wget -O .gitignore https://raw.githubusercontent.com/github/gitignore/main/Pytho
 python -m venv .venv
 source .venv/bin/activate  # for Windows: source .venv/Scripts/activate
 
-# Skip writing .pyc files. With `testpaths = specs/**`, a stale __pycache__
-# would otherwise get globbed by pytest on repeated runs and break collection.
-export PYTHONDONTWRITEBYTECODE=1
-
 # 1.4 - Dependencies (test + quality tooling)
 python -m pip install --upgrade pip
 pip install pytest pytest-cov black isort flake8 mypy pre-commit
@@ -44,7 +40,7 @@ pip freeze | grep -E "^(pytest==|pytest-cov==|black==|isort==|flake8==|mypy==|pr
 # 1.5 - pytest config (same BDD conventions as the bowling kata)
 cat > pytest.ini << 'EOF'
 [pytest]
-testpaths = specs/**
+testpaths = specs
 python_files = when*.py
 python_classes = Describe
 python_functions = should_*
@@ -64,7 +60,12 @@ git commit -m "Create new file renamer kata"
 #####################################################
 
 # 2.1 - Write it to fail. A spec for normalizing a single filename.
-cat > specs/when_normalizing_a_filename.py << 'EOF'
+cat >| src/renamer/naming.py <<'EOF'
+def slugify(name: str) -> str:
+  pass
+EOF
+
+cat >| specs/when_normalizing_a_filename.py << 'EOF'
 from src.renamer.naming import slugify
 
 
@@ -73,14 +74,12 @@ class DescribeSlugify:
         assert slugify("My Vacation Photo.JPG") == "my-vacation-photo.jpg"
 EOF
 
-python -m pytest  # ImportError / fail - the module does not exist yet
+python -m pytest  # fail - AssertionError: assert None == 'my-vacation-photo.jpg'
 
 # 2.2 - Write it to pass.
 #       `slugify` shows: variables, a conditional, string methods, and the
 #       str.maketrans/translate idiom. Note the explicit return type hint.
-cat > src/renamer/naming.py << 'EOF'
-from __future__ import annotations  # builtin generics (tuple[...]) on Py3.8+
-
+cat >| src/renamer/naming.py << 'EOF'
 import re
 
 # A module-level constant (UPPER_SNAKE_CASE by convention) compiled once.
@@ -113,6 +112,36 @@ git commit -m "Add slugify for single filename normalization"
 #####################################################
 
 # 3.1 - Add a spec. We want to keep the extension intact while slugging.
+#       Rewrite naming.py with a failing stub beside the existing slugify.
+cat >| src/renamer/naming.py <<'EOF'
+from __future__ import annotations  # builtin generics (tuple[...]) on Py3.8+
+
+import re
+
+# A module-level constant (UPPER_SNAKE_CASE by convention) compiled once.
+_INVALID = re.compile(r"[^a-z0-9.]+")
+
+
+def slugify(name: str) -> str:
+    # Variables are just names bound to values - no declaration keyword.
+    lowered = name.strip().lower()
+
+    # Collapse any run of "invalid" characters down to a single hyphen.
+    slug = _INVALID.sub("-", lowered)
+
+    # A conditional to trim stray hyphens off the ends.
+    if slug.startswith("-"):
+        slug = slug[1:]
+    if slug.endswith("-"):
+        slug = slug[:-1]
+
+    return slug
+
+
+def split_extension(name: str) -> tuple[str, str]:
+    pass
+EOF
+
 cat >> specs/when_normalizing_a_filename.py << 'EOF'
 
 
@@ -125,11 +154,33 @@ class DescribeSplitExtension:
         assert suffix == ".pdf"
 EOF
 
-python -m pytest  # 1 failed, 1 passed
+python -m pytest  # 1 failed, 1 passed -  TypeError: cannot unpack non-iterable NoneType object
 
 # 3.2 - Implement it. Functions can return multiple values as a tuple, which
 #       the caller unpacks: `stem, suffix = split_extension(...)`.
-cat >> src/renamer/naming.py << 'EOF'
+cat >| src/renamer/naming.py << 'EOF'
+from __future__ import annotations  # builtin generics (tuple[...]) on Py3.8+
+
+import re
+
+# A module-level constant (UPPER_SNAKE_CASE by convention) compiled once.
+_INVALID = re.compile(r"[^a-z0-9.]+")
+
+
+def slugify(name: str) -> str:
+    # Variables are just names bound to values - no declaration keyword.
+    lowered = name.strip().lower()
+
+    # Collapse any run of "invalid" characters down to a single hyphen.
+    slug = _INVALID.sub("-", lowered)
+
+    # A conditional to trim stray hyphens off the ends.
+    if slug.startswith("-"):
+        slug = slug[1:]
+    if slug.endswith("-"):
+        slug = slug[:-1]
+
+    return slug
 
 
 def split_extension(name: str) -> tuple[str, str]:
@@ -387,15 +438,13 @@ from src.renamer.scan import iter_files
 
 
 def rename_directory(root: str, dry_run: bool = True) -> list[tuple[str, str]]:
-    # A dict-comprehension-friendly pipeline: scan -> basenames -> plan -> apply.
-    filenames = [os.path.basename(p) for p in iter_files(root)]
-    name_to_target = plan_renames(filenames)
+    # Keep each file's real path (it may live in a subdirectory) so apply_plan
+    # renames it in place; only the basename is slugified.
+    paths = list(iter_files(root))
+    name_to_target = plan_renames([os.path.basename(p) for p in paths])
 
-    # Re-key the plan to full paths so apply_plan can rename in place.
-    full_plan = {
-        os.path.join(root, original): target
-        for original, target in name_to_target.items()
-    }
+    # Map every real path to its slugified basename via a dict comprehension.
+    full_plan = {path: name_to_target[os.path.basename(path)] for path in paths}
     return apply_plan(full_plan, dry_run=dry_run)
 EOF
 

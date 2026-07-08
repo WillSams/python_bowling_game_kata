@@ -70,9 +70,9 @@ See [docs/README.md](./docs/README.md) for the full progression and how to pract
 
 The project uses GitHub Actions for continuous integration.
 
-- **[pr-validate.yml](./.github/workflows/pr-validate.yml)** — runs on every push and pull request to `main`: installs dependencies, lints with Flake8, and runs the full test suite
-- **[branch-name-check.yml](./.github/workflows/branch-name-check.yml)** — enforces semantic branch naming on pull requests (e.g. `feat/`, `fix/`, `chore/`)
-- **[dependabot.yml](./.github/dependabot.yml)** — automatically opens weekly PRs to keep pip dependencies up to date
+* **[pr-validate.yml](./.github/workflows/pr-validate.yml)** — runs on every push and pull request to `main`: installs dependencies, lints with Flake8, and runs the full test suite
+* **[branch-name-check.yml](./.github/workflows/branch-name-check.yml)** — enforces semantic branch naming on pull requests (e.g. `feat/`, `fix/`, `chore/`)
+* **[dependabot.yml](./.github/dependabot.yml)** — automatically opens weekly PRs to keep pip dependencies up to date
 
 ## License
 

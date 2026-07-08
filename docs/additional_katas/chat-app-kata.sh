@@ -31,7 +31,7 @@
 #############################################
 # 1 - Create a new repo                     #
 #############################################
-source deactivate
+deactivate 2>/dev/null || true
 rm -rf python-async-chat-kata && mkdir python-async-chat-kata && cd $_
 
 git init .
@@ -39,10 +39,6 @@ wget -O .gitignore https://raw.githubusercontent.com/github/gitignore/main/Pytho
 
 python -m venv .venv
 source .venv/bin/activate  # for Windows: source .venv/Scripts/activate
-
-# Skip writing .pyc files. With `testpaths = specs/**`, a stale __pycache__
-# would otherwise get globbed by pytest on repeated runs and break collection.
-export PYTHONDONTWRITEBYTECODE=1
 
 # pytest-asyncio is not strictly required - our specs drive coroutines with
 # asyncio.run(...) - but we install the usual quality tooling.
@@ -52,7 +48,7 @@ pip freeze | grep -E "^(pytest==|pytest-cov==|black==|isort==|flake8==|mypy==|pr
 
 cat > pytest.ini << 'EOF'
 [pytest]
-testpaths = specs/**
+testpaths = specs
 python_files = when*.py
 python_classes = Describe
 python_functions = should_*
@@ -417,7 +413,7 @@ async def peer_bot(room: Room, inbox: "asyncio.Queue[Message]") -> None:
 
 async def read_line(prompt: str) -> str:
     # input() is blocking, so run it on a thread to keep the loop responsive.
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, input, prompt)
 
 
@@ -426,7 +422,7 @@ async def main() -> None:
     my_inbox = room.subscribe()
     peer_inbox = room.subscribe()
 
-    bot = asyncio.ensure_future(peer_bot(room, peer_inbox))
+    bot = asyncio.create_task(peer_bot(room, peer_inbox))
 
     print(f"Chatting with {PEER} (team captain). Type a message ('exit' to quit).")
     try:
